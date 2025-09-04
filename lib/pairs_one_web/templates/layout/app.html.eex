@@ -16,6 +16,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
 
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="/css/fix.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto">
     <link rel="canonical" href="<%= @conn.request_path %>" />
     <%= for {code, _name} <- lang_select_options() do %>
@@ -45,22 +46,13 @@
             </div>
             <div class="col-sm-6"><h2><%= gettext "Concentration game: multiplayer and registration-free" %></h2></div>
           </div>
-          <a href="https://t.me/ultramemorybot">
-          <p class="linked-banner alert alert-info" style="margin-top: 20px; font-size: 1.6rem;" role="alert">
-            🚀🚀🚀&nbsp;<%= gettext "Discover the all-new, improved Memory game you can play right on Telegram!" %>&nbsp;
-            <span class="fa fa-arrow-right"></span>
-
-
-          </p>
-          </a>
-          <h3><%= gettext "Unload your mind while improving your memory" %></h3>
         </header>
       <% end %>
 
       <div class="<%= if assigns[:full_width], do: "container--full-width" %>">
-        <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-        <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-        <p class="alert alert-success" role="alert"><%= get_flash(@conn, :warning) %></p>
+        <p class="alert " role="alert"><%= get_flash(@conn, :info) %></p>
+        <p class="alert " role="alert"><%= get_flash(@conn, :error) %></p>
+        <p class="alert " role="alert"><%= get_flash(@conn, :warning) %></p>
         <%= @inner_content %>
       </div>
 
@@ -72,14 +64,15 @@
         </div>
         <div class="text-muted col-md-6 col-md-pull-6">
           © <%= DateTime.utc_now.year %>
-          <%= link "Max Gorin", to: "https://mxgrn.com" %>
-          <%= link to: "https://github.com/mxgrn/pairs.one" do %>
+          <%= link to: "https://github.com/jefersonjhone/pairs.one" do %>
             <span class="fa fa-github"></span>
             <%= gettext "Source code" %>
           <% end %>
         </div>
       </div>
     </div> <!-- /container -->
+    <script src="<%= static_path(@conn, "/js/game.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/gamesettings.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <%= if Application.get_env(:pairs_one, :ga) do %>
       <%= render "ga.html" %>

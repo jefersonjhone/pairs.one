@@ -29,6 +29,7 @@ type alias Model =
     , phxSocket : Phoenix.Socket.Socket Msg
     , phxPresences : PresenceState PlayerPresence
     , inFocus : Bool
+    , configGame: ConfigGame
     }
 
 
@@ -61,7 +62,7 @@ playerName model =
 
 gameUrl : Model -> String
 gameUrl model =
-    "https://" ++ model.host ++ "/" ++ model.locale ++ "/games/" ++ model.game.id
+    "https://" ++ model.host ++ "/" ++ model.locale ++ "/games/" ++ model.game.configGame.id
 
 
 gameIsActive : Model -> Bool

@@ -123,9 +123,12 @@ $(function(){
         theme: "eighties",
         size: 6,
         players: 2,
-        visibility: "public"
+        visibility: "public",
+        showCardsAtStart: false,
+        showCardsDuration: 5  
       },
-        settings = JSON.parse(localStorage.getItem(settingsKey) || JSON.stringify(defaultSettings));
+      
+      settings = JSON.parse(localStorage.getItem(settingsKey) || JSON.stringify(defaultSettings));
 
       elm = Elm.GameSettings.embed(el, {
         csrf: $(el).data("csrf"),
@@ -134,7 +137,9 @@ $(function(){
         theme: settings.theme,
         size: settings.size,
         players: settings.players,
-        visibility: settings.visibility
+        visibility: settings.visibility,
+        showCardsAtStart: settings.showCardsAtStart,
+        showCardsDuration: settings.showCardsDuration
       });
 
       elm.ports.saveSettingsToLocalStorage.subscribe(function(params){

@@ -30,3 +30,5 @@ type Msg
     | OnInputPlayerName String
     | SetUserName
     | UpdateFocus JE.Value
+    | StartFlipTimer
+    | FlipBackCards

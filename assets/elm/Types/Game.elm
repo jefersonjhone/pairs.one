@@ -15,6 +15,11 @@ import Types.Card exposing (..)
 type alias GameId =
     String
 
+type alias ConfigGame =
+    { id : GameId
+    , showCardsAtStart : Bool 
+    , showCardsDuration : Int
+    }
 
 cardDataEncoder : CardData -> JE.Value
 cardDataEncoder cardData =
@@ -26,33 +31,47 @@ cardDataEncoder cardData =
         ]
 
 
+configGameEncoder : ConfigGame -> JE.Value 
+configGameEncoder configGame =
+    JE.object 
+        [ ("id", configGame.id |> JE.string)
+        , ("showCardsAtStart", configGame.showCardsAtStart |> JE.bool)
+        , ("showCardsDuration", configGame.showCardsDuration |> JE.int)
+        ]
+
+
+
+
+
+
 type alias Game =
-    { id : GameId
-    , cards : CardData
+    { cards : CardData
     , players : List Player
     , flips : Int
     , turn : Int
     , theme : String
     , random : Bool
     , visibility : String
+    , configGame : ConfigGame  
     }
 
 
 gameEncoder : Game -> JE.Value
 gameEncoder game =
     JE.object
-        [ ( "cards", game.cards |> cardDataEncoder )
+        [ ("configGame", game.configGame |> configGameEncoder)
+        , ( "cards", game.cards |> cardDataEncoder )
         , ( "players", (List.map playerEncoder game.players) |> JE.list )
         , ( "flips", game.flips |> JE.int )
         , ( "turn", game.turn |> JE.int )
         , ( "theme", game.theme |> JE.string )
+
         ]
 
 
 gameDecoder : JD.Decoder Game
 gameDecoder =
     JD.map8 Game
-        (field "id" JD.string)
         (field "cards"
             (JD.map4 CardData
                 (field "cleared" (JD.list JD.int))
@@ -67,6 +86,13 @@ gameDecoder =
         (field "theme" JD.string)
         (field "random" JD.bool)
         (field "visibility" JD.string)
+        (field "configGame"
+            (JD.map3 ConfigGame 
+                (field "id" JD.string)
+                (field "showCardsAtStart" JD.bool)
+                (field "showCardsDuration" JD.int)
+            )
+        )
 
 
 updatePlayerName : Game -> PlayerId -> String -> Game

@@ -33,17 +33,23 @@ defmodule PairsOne.Theme do
       cards: 50,
       difficulty: 0,
       new: false
-    },
+      },
     gym: %{
       title: "Gym",
       cards: 50,
       difficulty: 0,
       new: true
-    },
+      },
     xmas: %{
       title: "Xmas",
       cards: 50,
       difficulty: 0,
+      new: true
+      },
+    times_brasileiros: %{
+      title: "Times Brasileiros",
+      cards: 32,
+      difficulty: 1,
       new: true
     },
     pokemon: %{
@@ -57,6 +63,12 @@ defmodule PairsOne.Theme do
       cards: 48,
       difficulty: 1,
       new: false
+    },
+    emojis: %{
+      title: "Emojis",
+      cards: 125,
+      difficulty: 1,
+      new: true
     },
     music: %{
       title: "Music",
@@ -92,8 +104,7 @@ defmodule PairsOne.Theme do
       title: "Space",
       cards: 50,
       difficulty: 2,
-      new: true
-    }
+      new: true}
   ]
 
   @doc """

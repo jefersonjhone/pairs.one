@@ -15,6 +15,38 @@ import Types.Msg exposing (..)
 import I18n exposing (..)
 import I18n.Translation exposing (..)
 
+import Task
+
+
+
+init : Model -> (Model, Cmd Msg)
+init model =
+    let
+        -- Primeiro pegamos o configGame atual
+        game = model.game 
+        currentConfig =
+            game.configGame
+
+        -- Atualizamos o configGame
+        updatedConfig =
+            { currentConfig
+                | showCardsDuration = 5
+                , showCardsAtStart = True
+            }
+
+        -- Atualizamos o game com o novo configGame
+        updatedGame =
+            { game | configGame = updatedConfig }
+
+        -- Atualizamos o model com o novo game
+        updatedModel =
+            { model | game = updatedGame }
+    in
+    ( updatedModel
+    , Task.perform (\_ -> StartFlipTimer) (Task.succeed ())
+    )
+
+
 
 boardView : Model -> Html Msg
 boardView model =

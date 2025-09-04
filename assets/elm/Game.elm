@@ -48,10 +48,12 @@ subscriptions model =
 
 
 init : Params -> ( Model, Cmd Msg )
-init { id, playerId, host, isSsl, playerName, themes, locale } =
+init { id, playerId, host, isSsl, playerName, themes, locale , configGame} =
     let
+        configDefault =
+            ConfigGame "" False 5
         game =
-            Game "" (CardData [] [] [] []) [] 0 0 "eighties" False "public"
+            Game (CardData [] [] [] []) [] 0 0 "eighties" False "public" configDefault
 
         payload =
             JE.object
@@ -95,6 +97,8 @@ init { id, playerId, host, isSsl, playerName, themes, locale } =
           , phxSocket = socketInit
           , phxPresences = Dict.empty
           , inFocus = True
+          , configGame = configDefault
           }
         , Cmd.map PhoenixMsg phxCmd
         )
+

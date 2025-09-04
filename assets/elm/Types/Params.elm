@@ -13,4 +13,5 @@ type alias Params =
     , isSsl : Bool
     , themes : List Theme
     , locale : String
+    , configGame : ConfigGame
     }

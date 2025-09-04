@@ -7,19 +7,22 @@ defmodule PairsOne.Game do
   """
 
   alias PairsOne.Theme
-  alias Exredis.Api, as: Redis
+  #alias Exredis.Api, as: Redis
+  alias PairsOne.InMemoryStore, as: Redis
 
-  defstruct id: "",
-            cards: %{cleared: [], flipped: [], seen: [], values: []},
+  defstruct cards: %{cleared: [], flipped: [], seen: [], values: []},
             players: [],
             theme: "eighties",
             flips: 2,
             turn: -1,
             visibility: "public",
-            random: false
+            random: false,
+            configGame: %{ id: "", showCardsAtStart: false, showCardsDuration: 5}
+
 
   @redis_prefix "game:"
 
+  @spec get(any()) :: false | nil | true | binary() | list() | number() | map()
   @doc """
   Fetch persisted game by its id
   """
@@ -31,7 +34,7 @@ defmodule PairsOne.Game do
   Check whether game with given id is persisted
   """
   def exists?(id) do
-    Redis.exists(:redis, "#{@redis_prefix}#{id}") == 1
+    Redis.exists(:redis, "#{@redis_prefix}#{id}")
   end
 
   @doc """
@@ -42,7 +45,9 @@ defmodule PairsOne.Game do
         "players_number" => players_number,
         "theme" => theme_name,
         "visibility" => visibility,
-        "random" => random
+        "random" => random,
+        "showCardsAtStart" => showCardsAtStart,
+        "showCardsDuration"=> showCardsDuration
       }) do
     players_number = String.to_integer(players_number)
     board_size = String.to_integer(board_size)
@@ -62,18 +67,30 @@ defmodule PairsOne.Game do
         -1
       end
 
-    game = %PairsOne.Game{
+    showcards =
+      if showCardsAtStart == "on" do
+        true
+      else
+        false
+      end
+
+    showDuration = String.to_integer(showCardsDuration)
+    config_game = %{
       id: id,
+      showCardsAtStart: showcards,
+      showCardsDuration: showDuration
+    }
+    game = %PairsOne.Game{
       cards: cards(board_size, Theme.cards_number(theme_name)),
       players: players,
       theme: theme_name,
       visibility: visibility,
       random: random,
-      turn: turn
+      turn: turn,
+      configGame: config_game
     }
 
     save!(id, game)
-
     game
   end
 
@@ -227,14 +244,12 @@ defmodule PairsOne.Game do
     ok? = fn player ->
       player["id"] == player_id || not player["joined"]
     end
-
     Enum.find_index(players, ok?)
   end
 
   # Given game's id, fetches game's JSON from Redis
   defp get_json(id) do
     game_string = Redis.get(:redis, "#{@redis_prefix}#{id}")
-
     if game_string == :undefined do
       ""
     else

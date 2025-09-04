@@ -40,7 +40,7 @@ exports.config = {
     watched: ["elm", "static", "css", "js", "vendor"],
 
     // Where to compile files to
-    public: "../priv/static"
+    public: "public"
   },
 
   // Configure your plugins
@@ -49,7 +49,7 @@ exports.config = {
     elmBrunch: {
       elmFolder: "elm",
       mainModules: ["Game.elm", "GameList.elm", "GameSettings.elm"],
-      outputFolder: "../vendor/elm"
+      outputFolder: "../../priv/static/js"
     },
     babel: {
       // Do not use ES6 compiler in vendor code

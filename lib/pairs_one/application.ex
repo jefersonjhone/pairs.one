@@ -13,8 +13,9 @@ defmodule PairsOne.Application do
        [Application.get_env(:libcluster, :topologies, []), [name: PairsOne.ClusterSupervisor]]},
       {Phoenix.PubSub, name: PairsOne.PubSub},
       PairsOneWeb.Presence,
-      PairsOne.RedisRepo,
+      #PairsOne.RedisRepo,
       PairsOne.PendingGames,
+      PairsOne.InMemoryStore,
       PairsOneWeb.Endpoint
     ]
 

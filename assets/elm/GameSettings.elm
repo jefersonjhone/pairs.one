@@ -23,6 +23,7 @@ type alias ThemeName =
     String
 
 
+
 type alias Params =
     { csrf : String
     , locale : String
@@ -31,6 +32,8 @@ type alias Params =
     , size : Int
     , players : Int
     , visibility : String
+    , showCardsAtStart : Bool 
+    , showCardsDuration : Int
     }
 
 
@@ -45,6 +48,7 @@ type Selector
     | BoardSizeSelector
     | PlayersSelector
     | VisibilitySelector
+    | UpdateShowCardsDurationSelector
     | NullSelector
 
 
@@ -53,10 +57,13 @@ type Msg
     | ShowBoardSizeSelector
     | ShowPlayersSelector
     | ShowVisibilitySelector
+    | ShowUpdateShowCardsDurationSelector
     | SelectTheme ThemeName
     | SelectBoardSize Int
     | SelectPlayers Int
     | SelectVisibility Visibility
+    | ToggleShowCardsAtStart
+    | UpdateShowCardsDuration String
     | CloseModal
     | Presses Int
 
@@ -70,6 +77,8 @@ type alias Model =
     , boardSize : Int
     , players : Int
     , visibility : Visibility
+    , showCardsAtStart : Bool 
+    , showCardsDuration : Int
     }
 
 
@@ -84,7 +93,7 @@ main =
 
 
 init : Params -> ( Model, Cmd Msg )
-init { csrf, locale, themes, theme, size, players, visibility } =
+init { csrf, locale, themes, theme, size, players, visibility, showCardsAtStart, showCardsDuration } =
     let
         theme_ =
             -- List.head (themes) |> Maybe.withDefault defaultTheme
@@ -99,6 +108,8 @@ init { csrf, locale, themes, theme, size, players, visibility } =
             size
             players
             (visibilityFromString visibility)
+            showCardsAtStart
+            showCardsDuration
         )
             ! []
 
@@ -123,6 +134,9 @@ update msg model =
 
         ShowVisibilitySelector ->
             { model | selector = VisibilitySelector } ! []
+
+        ShowUpdateShowCardsDurationSelector ->
+            { model | selector = UpdateShowCardsDurationSelector } ! []
 
         CloseModal ->
             { model | selector = NullSelector } ! []
@@ -157,6 +171,24 @@ update msg model =
                     { model | visibility = visibility, selector = NullSelector }
             in
                 model_ ! [ saveSettings model_ ]
+        
+        ToggleShowCardsAtStart ->
+            let
+                model_ =
+                    { model | showCardsAtStart = not model.showCardsAtStart }
+            in
+                model_ ! [ saveSettings model_ ]
+        
+        UpdateShowCardsDuration input ->
+            case String.toInt input of
+                Ok duration ->
+                    let
+                        model_ =
+                            { model | showCardsDuration = duration }
+                    in
+                        model_ ! [ saveSettings model_ ]
+                Err _ ->
+                    ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -178,6 +210,9 @@ modalSelector model =
 
         VisibilitySelector ->
             modal <| visibilities model
+        
+        UpdateShowCardsDurationSelector ->
+            modal <| selectCardsDuration model
 
         NullSelector ->
             text ""
@@ -270,6 +305,12 @@ view model =
                         , div [ class "col-sm-3" ]
                             [ visibilityButton model
                             ]
+                        , div [class "col-sm-3"]
+                            [ selectShowCards model
+                            ]
+                        , div [class "col-sm-3"]
+                            [ showCardsDuration model
+                            ]
                         ]
                     , div [ class "row btn-go-wrapper" ]
                         [ div [ class "col-sm-4 col-sm-offset-4 centered-content" ]
@@ -279,6 +320,83 @@ view model =
                     ]
                 ]
             ]
+
+selectCardsDuration : Model -> Html Msg
+selectCardsDuration model =
+    let 
+        -- seconds : List Int
+        -- seconds = [ 2, 3, 5, 8, 10 ]
+        seconds : List String 
+        seconds = ["2", "3", "4", "5", "8", "10"]
+    in 
+        div [ class "modal-conten " 
+            , name "game[showCardsDuration]" 
+            ]
+            [ h3 [] [ text "Duração da Exibição Inicial" ]
+            , p [] [ text "Selecione por quanto tempo as cartas ficarão visíveis:" ]
+            , div [ class "options" ]
+                (List.map (\second ->
+                    div
+                        [ class "option btn btn-default btn-block btn-lg btn-stackable theme-medium "
+                        , onClick (UpdateShowCardsDuration second ) -- agora passa Int
+                        ]
+                        [ text ((second) ++ " segundos") ] -- converte só no texto
+                ) seconds )
+            ]
+
+
+selectShowCards : Model -> Html Msg
+selectShowCards model =
+    div [ class "btn btn-default btn-lg btn-game-setting flex items-center check-time"
+        , onClick ToggleShowCardsAtStart
+        ]
+        [ span [] [ text "Exibir cartas " ]
+        , input
+            [ type_ "checkbox"
+            , id "myCheck"
+            , name "game[showCardsAtStart]"
+            , checked model.showCardsAtStart
+            , style [ ("display", "none") ]
+            ]
+            []
+        , label
+            [ class
+                (if model.showCardsAtStart then
+                    "custom-checkbox checked"
+                else
+                    "custom-checkbox"
+                )
+            ]
+            [ text "" ]
+        ]
+
+
+
+showCardsDuration : Model -> Html Msg
+showCardsDuration model =
+    div
+        [ class
+            (if model.showCardsAtStart then
+                "bg-danger btn btn-default btn-lg btn-game-setting"
+             else
+                "none"
+            )
+        ]
+        [ div
+            [ class ""
+            , onClick ShowUpdateShowCardsDurationSelector
+            ]
+            [ text ("tempo visível: " ++ toString model.showCardsDuration ++ " seg")
+            , input
+                [ type_ "hidden"
+                , name "game[showCardsDuration]"
+
+                , value <| toString model.showCardsDuration
+                ]
+                []
+            ]
+        ]
+
 
 
 visibilityButton : Model -> Html Msg
@@ -475,6 +593,16 @@ visibilityFromString str =
         _ ->
             Public
 
+toggleToString : String -> String 
+toggleToString  str =
+    case str of
+        "on" ->
+            "true"
+        "off" ->
+            "false"
+        _ ->
+            "true"
+
 
 visibilityToString : Visibility -> String
 visibilityToString value =
@@ -501,5 +629,7 @@ settingsObject model =
         , ( "size", JE.int model.boardSize )
         , ( "players", JE.int model.players )
         , ( "visibility", JE.string <| visibilityToString model.visibility )
+        , ("showCardsAtStart", JE.bool <| model.showCardsAtStart )
+        , ("showCardsDuration", JE.int <| model.showCardsDuration)
         ]
     )

@@ -16,6 +16,9 @@ import Types.Model exposing (..)
 import Types.Msg exposing (..)
 import Types.Player exposing (..)
 
+import Process
+import Time exposing (second)
+import Task
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -26,7 +29,7 @@ update msg model =
         SetUserName ->
             let
                 push =
-                    Phoenix.Push.init "set_player_name" ("game:" ++ model.game.id)
+                    Phoenix.Push.init "set_player_name" ("game:" ++ model.game.configGame.id)
                         |> Phoenix.Push.withPayload
                             (JE.object
                                 [ ( "name", JE.string model.playerName )
@@ -46,7 +49,7 @@ update msg model =
         SendMessage ->
             let
                 push =
-                    Phoenix.Push.init "new_chat_msg" ("game:" ++ model.game.id)
+                    Phoenix.Push.init "new_chat_msg" ("game:" ++ model.game.configGame.id)
                         |> Phoenix.Push.withPayload
                             (JE.object
                                 [ ( "player_id", JE.string model.playerId )
@@ -186,6 +189,39 @@ update msg model =
                     in
                     model ! []
 
+        StartFlipTimer ->
+            -- Dispara um comando que, depois de X milissegundos, envia FlipBackCards
+            let
+                delay : Float
+                delay =
+                    toFloat (model.game.configGame.showCardsDuration * 1000)
+            in
+            ( model
+            , Task.perform (\_ -> FlipBackCards) (Process.sleep delay)
+            )
+
+        FlipBackCards ->
+            let
+                -- Primeiro pegamos o configGame atual
+                game = model.game 
+                currentConfig =
+                    game.configGame
+
+                -- Atualizamos o configGame
+                updatedConfig =
+                    { currentConfig | showCardsAtStart = False }
+
+                -- Atualizamos o game com o novo configGame
+                updatedGame =
+                    { game | configGame = updatedConfig }
+
+                -- Atualizamos o model com o novo game
+                updatedModel =
+                    { model | game = updatedGame }
+            in
+            ( updatedModel, Cmd.none )
+
+       
 
 replay : Model -> ( Model, Cmd Msg )
 replay model =
@@ -194,7 +230,7 @@ replay model =
             gameEncoder model.game
 
         push =
-            Phoenix.Push.init "replay_game" ("game:" ++ model.game.id)
+            Phoenix.Push.init "replay_game" ("game:" ++ model.game.configGame.id)
                 |> Phoenix.Push.withPayload payload
 
         ( phxSocket, phxCmd ) =
@@ -380,8 +416,9 @@ sendCompressedGame : Model -> JE.Value -> Cmd Msg
 sendCompressedGame model game =
     let
         push =
-            Phoenix.Push.init "update_game" ("game:" ++ model.game.id)
+            Phoenix.Push.init "update_game" ("game:" ++ model.game.configGame.id)
                 |> Phoenix.Push.withPayload game
+
 
         ( phxSocket, phxCmd ) =
             Phoenix.Socket.push push model.phxSocket
